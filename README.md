@@ -37,4 +37,4 @@ PIC12F1822|YES|
 PIC16F18326|YES|Programming only
 
 The whole project is licensed under MIT license, see LICENSE.md file.
-Some more details to be found here https://hackaday.io/project/8559-pic16f1xxx-arduino-based-programmer
+
