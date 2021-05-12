@@ -1,7 +1,8 @@
 # Programmer for 8-bit PIC devices built upon STM8S003F3P6, based on original AVR version
 
 ## Hardware
-STM8S003F3P6
+
+STM8S003F3P6, any USB to UART connected to UART1 PD5/PD6 (TX/RX).
 
 | STM8S003F3P6 pin | Target PIC pin | Comment                                                                     |
 |------------------|----------------|-----------------------------------------------------------------------------|
