@@ -1,4 +1,4 @@
-# Programmer for 8-bit PIC devices built upon STM8S003F3P6, based on original AVR version
+# Programmer for 8-bit PIC devices built upon STM8S003F3P6, based on the original AVR version
 
 ## Hardware
 
