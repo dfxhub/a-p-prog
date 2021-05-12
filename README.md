@@ -70,7 +70,7 @@ There is database file pp3_devices.dat which hold information of supported PIC t
 
 See orginal AVR version https://github.com/jaromir-sukuba/a-p-prog
 
-Tested by myself^
+Tested by myself:
 
 **DEVICE**|**TESTED**|**NOTES**
 :-----:|:-----:|:-----:
