@@ -1,48 +1,15 @@
-# Programmer for 8-bit PIC devices built upon AVR (or Arduino)
-
-For [Micro progmeter](https://github.com/jaromir-sukuba/micro_progmeter) project I want to deliver full set of open-source materials, but it would be shame if folks trying to replicate the project would have to buy another programmer to flash the PIC MCU, so I decided to do a little bit of brain stretching and implement PIC16F1xxx programmer with... Arduino. I really can't say I love this platform, but it is low cost and available.
-Together with SDCC compiler this serves as completely open-source basis for many 8-bit PIC devices.
-
-The current project status: Programmer working, sources need cleanup, perhaps rework of its structure (it grew out of its simple structure).
-# List of supported devices is at the end of this page.
-
+# Programmer for 8-bit PIC devices built upon STM8S003F3P6, based on original AVR version
 
 ## Hardware
-There are two options fo hardware for this project:
+STM8S003F3P6
 
-### Hardware option 1 - Arduino hardware
-Take any Arduino with ATmega328P, like Uno or most of cheap chinese knock-off boards. Considering the target has its own power supply, connect GND, MCLR, PGC and PGD lines to respective pins on arduino as follows:
-
-| Arduino pin | AVR pin | Target PIC pin | Comment                                                                     |
-|-------------|---------|----------------|-----------------------------------------------------------------------------|
-| GND         | GND     | GND            | common ground                                                               |
-| 5V          | VDD     | VDD            | optional*- power supply for PIC MCU, you may power target from other source |
-| A3          | PC3     | MCLR           | reset line of PIC MCU                                                       |
-| A1          | PC1     | PGD            | programming data line                                                       |
-| A0          | PC0     | PGC            | programming clock line                                                      |
-
-* If you are powering target PIC from other power source (in circuit programming), series resistors (something like 470-1000 Ohms) in MCLR, PGC and PGD lines are good idea, it will somehow decrease currents flowing through IO pins due to power supplies differences between arduino and target board. In this configuration, even targets running at 3,3V are possible to program, though it is dirty practice.
-
-Power it up, no smoke should be released. Run arduino IDE, open programmer firmware from here (/fw/pp.ino), complie and upload to arduino board - now you have PIC programmer ready to go. Go to software below.
-
-The programmer is proven to work with some generic Uno board from china, as well as chinese arduino-nano clone
-![img_5494](https://cloud.githubusercontent.com/assets/6984904/17290864/ddd9d386-57e0-11e6-8d15-55c6c0e015a6.JPG)
-
-### Hardware option 2 - dedicated board
-I designed this little board, see at /hw directory
-![img_4319](https://cloud.githubusercontent.com/assets/6984904/17289293/5cedd6c0-57d9-11e6-86b8-8d692eaa24e3.JPG)
-Considering the target has its own power supply, connect GND, MCLR, PGC and PGD lines to respective pins on PIC programmer (notice the pinout similar to PICkit programmers). Vdd line is not currently used ad it is not needed for operation of programmer, but future revisions of firmware may take advantage of this pin and detect target VDD.
-The hardware works with both FT232RL and CY7C65213 in place of USB/serial converter. Both were proven to work, with no other hardware difference.
-![img_4320](https://cloud.githubusercontent.com/assets/6984904/17289353/a3ccf6d4-57d9-11e6-9d4f-595633e7841a.JPG)
-
-Use [another arduino](https://www.arduino.cc/en/Tutorial/ArduinoISP) (or proper ISP programmer) to load Arduino UNO bootloader to PIC programmer board (performed only once), turning it into regular arduino compatible board.
-
-![img_4329](https://cloud.githubusercontent.com/assets/6984904/17289342/98207cf2-57d9-11e6-9b62-caba0b140ca5.JPG)
-
-Ensure JP2 is closed, then you can load new firmware into PIC programmer using regular Arduino IDE. Open jumper JP2. Now you have your programmer ready to go, move on to software.
-The firmware should be able to compile outside Arduino IDE as it doesn't contain any Arduino-specific stuff, though I haven't tried that.
-
-
+| STM8S003F3P6 pin | Target PIC pin | Comment                                                                     |
+|------------------|----------------|-----------------------------------------------------------------------------|
+| VSS              | GND            | common ground                                                               |
+| VDD              | VDD            | optional*- power supply for PIC MCU, you may power target from other source |
+| PC5              | MCLR           | reset line of PIC MCU                                                       |
+| PC4              | PGD            | programming data line                                                       |
+| PC3              | PGC            | programming clock line                                                      |
 
 ## Software
 
@@ -78,12 +45,6 @@ under Windows should program the target PIC; with expected result:
 
 ## Notes on software
 
-If you are running the hardware on generic arduino board or you forget to open jumper JP2 after loading firmware on dedicated hardware, you may need to insert waiting time after opening serial port and before communication - to ensure Arduino bootloader times out after opening serial port and takes control to programmer firmware. It should look like this
-
-`pp3.exe -c COM30 -s 1700 -t 16f1829 file.bin`
-
-where number after -s switch defines the number of miliseconds to wait after opening the serial port.
-
 You may omit the actual programming using -p switch or verification using -n switch, when using both the programmer only checks target device signature and exits.
 
 `$ ./pp3 -c /dev/ttyACM0 -p -n -t 16f1829 file.bin`
@@ -93,7 +54,10 @@ You may omit the actual programming using -p switch or verification using -n swi
     Releasing MCLR
 
 you can add some debug output info using -v parameter, ranging from -v 1 to -v 4. It may be suitable for debugging, -v 4 prints out all byte transaction on serial port, so be prepared for huge output.
-There is database file pp3_devices.dat which hold information of supported PIC types. For now, the filename is fixed in code can't be changed and file has to be in the same directory as pp executable..
+There is database file pp3_devices.dat which hold information of supported PIC types. For now, the filename is fixed in code can't be changed and file has to be in the same directory as pp executable.
+Experimental -r option - read flash, eeprom (only for 12f1822 or same), config:
+
+`$ ./pp3 -c /dev/ttyACM0 -t 16f1829 -r`
 
 
 ## Supported devices
