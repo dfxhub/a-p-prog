@@ -68,14 +68,14 @@ There is database file pp3_devices.dat which hold information of supported PIC t
 
 ## Supported devices
 
-Obviously, there is more supported than verified (tested) devices. I tried to test at least one device from specific family. The members from one family are usually very very similar, giving me enough confidence to mark them as supproted. Of course, typos can happen, but those are easy to correct.
+See orginal AVR version https://github.com/jaromir-sukuba/a-p-prog
+
+Tested by myself^
 
 **DEVICE**|**TESTED**|**NOTES**
 :-----:|:-----:|:-----:
 PIC12F1822|YES|
 PIC16F18326|YES|Programming only
-
-All other MCUs may working accordingly to the original AVR version.
 
 The whole project is licensed under MIT license, see LICENSE.md file.
 Some more details to be found here https://hackaday.io/project/8559-pic16f1xxx-arduino-based-programmer
