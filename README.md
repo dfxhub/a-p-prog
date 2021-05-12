@@ -57,9 +57,13 @@ You may omit the actual programming using -p switch or verification using -n swi
 you can add some debug output info using -v parameter, ranging from -v 1 to -v 4. It may be suitable for debugging, -v 4 prints out all byte transaction on serial port, so be prepared for huge output.
 There is database file pp3_devices.dat which hold information of supported PIC types. For now, the filename is fixed in code can't be changed and file has to be in the same directory as pp executable.
 
-Experimental -r option: read flash, eeprom (only for 12f1822 for now, 'Read Data From Data Memory' 05h programming command), config:
+### Experimental options
 
-`$ ./pp3 -c /dev/ttyACM0 -t 16f1829 -r`
+-r : read flash, eeprom (only for 12f1822 for now, 'Read Data From Data Memory' 05h programming command), config:
+
+`$ ./pp3 -c /dev/ttyACM0 -t 12f1822 -r`
+
+-b n : set baud rate. Default 115200.
 
 
 ## Supported devices
