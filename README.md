@@ -18,11 +18,12 @@ See orginal AVR version https://github.com/jaromir-sukuba/a-p-prog
 
 ### Added experimental options
 
--r : read flash, eeprom (only for 12f1822 for now, 'Read Data From Data Memory' 05h programming command), config. Example:
+-r<br>
+&emsp;read flash, eeprom (only for 12f1822 for now, 'Read Data From Data Memory' 05h programming command) and config.<br>
+&emsp;Example: `$ ./pp3 -c /dev/ttyACM0 -t 12f1822 -r`
 
-`$ ./pp3 -c /dev/ttyACM0 -t 12f1822 -r`
-
--b n : set baud rate. Default 115200.
+-b n<br>
+&emsp;set baud rate. Default 115200.
 
 
 ## Supported devices
