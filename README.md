@@ -32,8 +32,8 @@ See orginal AVR version https://github.com/jaromir-sukuba/a-p-prog
 
 Tested by myself:
 
-**DEVICE**|**TESTED**|**NOTES**
-:-----:|:-----:|:-----:
+DEVICE|TESTED|NOTES
+-----|-----|-----
 PIC12F1822|YES|
 PIC16F18326|YES|Programming only
 
