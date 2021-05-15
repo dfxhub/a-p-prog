@@ -1308,6 +1308,23 @@ int main(int argc, char *argv[])
 					if (verbose>1) printf ("config 2 OK: %4.4X\n",config);
 					}
 				else	printf ("config 2 error: E:0x%4.4X R:0x%4.4X\n",config,econfig);
+				
+				if (chip_family==CF_P16F_D) {
+					
+					config = p16a_get_config(9);
+					econfig = (((unsigned int)(file_image[2*0x8009]))<<0) + (((unsigned int)(file_image[2*0x8009+1]))<<8);
+					if (config==econfig) {
+						if (verbose>1) printf ("config 3 OK: %4.4X\n",config);
+					} else printf ("config 3 error: E:0x%4.4X R:0x%4.4X\n",config,econfig);
+					config = p16a_get_config(0x0a);
+					econfig = (((unsigned int)(file_image[2*0x800a]))<<0) + (((unsigned int)(file_image[2*0x800a+1]))<<8);
+					if (config==econfig) {
+						if (verbose>1) printf ("config 4 OK: %4.4X\n",config);
+					} else printf ("config 4 error: E:0x%4.4X R:0x%4.4X\n",config,econfig);
+					
+				}
+				
+				
 				}
 			if (chip_family==CF_P16F_C)
 				{
