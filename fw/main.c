@@ -525,11 +525,17 @@ isp_send(0x0,8);
 
 void isp_set_pointer_16d(uint32_t addr)
 {
+    // 
+    // Load PC Address
+    // 0, lsb addr ... msb addr
+    // total 24 bits
+    
     addr = addr << 1;
+    
     isp_send(0x1D,6);
-    isp_send(addr & 0xff,8);
+    isp_send(addr & 0xff,8); // 0 + lsb
     isp_send((addr >> 8) & 0xff,8);
-    isp_send((addr >> 16) & 0xff,8);
+    isp_send((addr >> 16) & 0xff,8); // msb
 }
 
 void isp_inc_pointer (void)
