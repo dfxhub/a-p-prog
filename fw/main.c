@@ -55,12 +55,14 @@ void isp_send_config (unsigned int data);
 
 void isp_read_pgm (unsigned int * data, unsigned char n);
 void isp_read_eeprom (unsigned char * data, unsigned char n);
+void isp_d_read_eeprom (unsigned char * data, unsigned char n);
 void isp_write_pgm (unsigned int * data, unsigned char n, unsigned char slow);
 void isp_mass_erase (void);
 
 void isp_inc_pointer (void);
 void isp_reset_pointer (void);
 void isp_reset_pointer_16d (void);
+void isp_set_pointer_16d(uint32_t addr);
 
 unsigned int isp_read_8 (void);
 unsigned int isp_read_8_msb (void);
@@ -202,7 +204,7 @@ void main( void )
                 rx_state = 0;
                 break;
                 
-            case 0x03: // p16a_rst_pointer
+            case 0x03: // p16a_rst_pointer A
                 isp_reset_pointer();
                 usart_tx_b (0x83);
                 rx_state = 0;
@@ -245,16 +247,32 @@ void main( void )
                 rx_state = 0;
                 break;
                 
-            case 0x09: // p16a_rst_pointer
+            case 0x09: // p16a_rst_pointer D
                 isp_reset_pointer_16d();
                 usart_tx_b (0x89);
                 rx_state = 0;
                 break;
 
-            case 0x0a: // p16a_read_eeprom
+            case 0x0a: // p16a_read_eeprom A
                 usart_tx_b (0x8a);
                 eeprom_buf = (unsigned char *)flash_buffer;
                 isp_read_eeprom(eeprom_buf, rx_message[2]);
+                for (i=0;i<rx_message[2];i++) {
+                    usart_tx_b (*eeprom_buf++);
+                }
+                rx_state = 0;
+                break;
+
+            case 0x0c: // p16d_set_pointer
+                isp_set_pointer_16d((uint32_t)rx_message[2] + (uint32_t)(rx_message[3] << 8));
+                usart_tx_b (0x8c);
+                rx_state = 0;
+                break;
+
+            case 0x0d: // p16a_read_eeprom D
+                usart_tx_b (0x8d);
+                eeprom_buf = (unsigned char *)flash_buffer;
+                isp_d_read_eeprom(eeprom_buf, rx_message[2]);
                 for (i=0;i<rx_message[2];i++) {
                     usart_tx_b (*eeprom_buf++);
                 }
@@ -450,6 +468,26 @@ for (i=0;i<n;i++)
   }
 }
 
+void isp_d_read_eeprom (unsigned char * data, unsigned char n)
+{
+unsigned char i;
+//_delay_us(3*ISP_CLK_DELAY);
+
+// eeprom starts at F000h
+//isp_send(0x1D,6); // Load PC Address
+//isp_send(0x00,8); // LSB
+//isp_send(0xe0,8);
+//isp_send(0x01,8); // MSB
+
+for (i=0;i<n;i++) {
+      isp_send(0x04,6);
+      data[i] = (unsigned char)(isp_read_14s() & 0xff); // only 8 lsb is valid data - data(8) zero(6)
+      isp_send(0x06,6);
+  }
+
+}
+
+
 
 void isp_write_pgm (unsigned int * data, unsigned char n, unsigned char slow)
 {
@@ -503,6 +541,15 @@ isp_send(0x1D,6);
 isp_send(0x0,8);
 isp_send(0x0,8);
 isp_send(0x0,8);
+}
+
+void isp_set_pointer_16d(uint32_t addr)
+{
+    addr = addr << 1;
+    isp_send(0x1D,6);
+    isp_send(addr & 0xff,8);
+    isp_send((addr >> 8) & 0xff,8);
+    isp_send((addr >> 16) & 0xff,8);
 }
 
 void isp_inc_pointer (void)
