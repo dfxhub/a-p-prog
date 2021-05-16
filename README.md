@@ -23,7 +23,7 @@ See orginal AVR version https://github.com/jaromir-sukuba/a-p-prog
 &emsp;Example: `$ ./pp3 -c /dev/ttyACM0 -t 12f1822 -r`
 
 -b n<br>
-&emsp;set baud rate. Default 115200.
+&emsp;set baud rate. Default 115200. Not implemented yet.
 
 
 ## Supported devices
