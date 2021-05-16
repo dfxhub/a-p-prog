@@ -19,7 +19,7 @@ See orginal AVR version https://github.com/jaromir-sukuba/a-p-prog
 ### Added experimental options
 
 -r<br>
-&emsp;read flash, eeprom (only for 12f1822 for now, 'Read Data From Data Memory' 05h programming command) and config.<br>
+&emsp;read flash, eeprom (only for 12f1822 and 16f18326 for now) and config.<br>
 &emsp;Example: `$ ./pp3 -c /dev/ttyACM0 -t 12f1822 -r`
 
 -b n<br>
@@ -35,7 +35,7 @@ Tested by myself:
 DEVICE|TESTED|NOTES
 -----|-----|-----
 PIC12F1822|YES|
-PIC16F18326|YES|Programming only
+PIC16F18326|YES|
 
 The whole project is licensed under MIT license, see LICENSE.md file.
 
