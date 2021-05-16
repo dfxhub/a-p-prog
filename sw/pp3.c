@@ -498,6 +498,17 @@ int p16a_rst_pointer (void)
     return 0;
     }
 
+int p16d_set_pointer (unsigned int addr)
+    {
+    if (verbose>2) flsprintf(stdout,"Setting PC\n");
+	putByte(0x0c);					//operation number
+    putByte(0x02);					//number of bytes remaining
+	putByte(addr & 0xff);
+	putByte((addr >> 8) & 0xff);
+    getByte();						//return result - no check for its value
+    return 0;
+    }
+
 int p16a_mass_erase (void)
     {
     if (verbose>2) flsprintf(stdout,"Mass erase\n");
@@ -556,16 +567,20 @@ int p16a_read_page (unsigned char * data, unsigned char num)
     }
 
 int p16a_read_eeprom (unsigned char * data, unsigned char num)
-    {
+{
     unsigned char i;
-    if (verbose>2) flsprintf(stdout,"Reading EEPROM of %d bytes\n", num);
-    putByte(0x0a);
-	putByte(0x01);
-    putByte(num);
-    getByte(); // response
-    for (i=0; i<num; i++) *data++ = getByte();
-    return 0;
-    }
+	if ((chip_family==CF_P16F_A) || (chip_family==CF_P16F_D)) {
+		if (verbose>2) flsprintf(stdout,"Reading EEPROM of %d bytes\n", num);
+		if (chip_family==CF_P16F_A) putByte(0x0a);
+		if (chip_family==CF_P16F_D) putByte(0x0d);
+		putByte(0x01);
+		putByte(num);
+		getByte(); // response
+		for (i=0; i<num; i++) *data++ = getByte();
+		return 1;
+	} else
+		return 0;
+}
 
 int p16a_get_devid (void)
     {
@@ -1366,6 +1381,9 @@ int main(int argc, char *argv[])
 				
 				if (verbose>0) printf ("Reading EEPROM");
 				fflush(stdout);
+				
+				if (chip_family==CF_P16F_D) p16d_set_pointer(0xf000);
+				
 				of = fopen("_eeprom.bin", "wb");
 				for (i=0; i<256; i=i+page_size) // TODO
 					{
@@ -1375,7 +1393,9 @@ int main(int argc, char *argv[])
 						fflush(stdout);
 						}
 
-					if (devid_expected == 0x2700) p16a_read_eeprom(tdat,page_size);
+					if ((chip_family==CF_P16F_A) || (chip_family==CF_P16F_D)) p16a_read_eeprom(tdat,page_size);
+					
+					// if (devid_expected == 0x2700) p16a_read_eeprom(tdat,page_size);
 					// if ((chip_family==CF_P16F_A)|(chip_family==CF_P16F_B)|(chip_family==CF_P16F_D)) p16a_read_eeprom(tdat,page_size);
 					// if ((chip_family==CF_P16F_C)) p16c_read_page(tdat,i,page_size);
 					
@@ -1398,6 +1418,15 @@ int main(int argc, char *argv[])
 					if (of)
 						fwrite(&config, 2, 1, of);
 					}
+					if (chip_family==CF_P16F_D) {
+						config = p16a_get_config(9);
+						if (of)
+							fwrite(&config, 2, 1, of);
+						config = p16a_get_config(0x0a);
+						if (of)
+							fwrite(&config, 2, 1, of);
+					}
+
 				if (chip_family==CF_P16F_C)
 					{
 					p16c_read_page(tdat,0x8007*2,page_size);
