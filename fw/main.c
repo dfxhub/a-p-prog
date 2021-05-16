@@ -54,8 +54,7 @@ void isp_send_8_msb (unsigned char data);
 void isp_send_config (unsigned int data);
 
 void isp_read_pgm (unsigned int * data, unsigned char n);
-void isp_read_eeprom (unsigned char * data, unsigned char n);
-void isp_d_read_eeprom (unsigned char * data, unsigned char n);
+void isp_read_eeprom (unsigned char * data, unsigned char n, unsigned char t);
 void isp_write_pgm (unsigned int * data, unsigned char n, unsigned char slow);
 void isp_mass_erase (void);
 
@@ -254,9 +253,16 @@ void main( void )
                 break;
 
             case 0x0a: // p16a_read_eeprom A
-                usart_tx_b (0x8a);
+            case 0x0d: // p16a_read_eeprom D
                 eeprom_buf = (unsigned char *)flash_buffer;
-                isp_read_eeprom(eeprom_buf, rx_message[2]);
+                if (rx_message[0] == 0x0a) {
+                    usart_tx_b (0x8a);
+                    isp_read_eeprom(eeprom_buf, rx_message[2], 'a');
+                }
+                else if (rx_message[0] == 0x0d) {
+                    usart_tx_b (0x8d);
+                    isp_read_eeprom(eeprom_buf, rx_message[2], 'd');
+                }
                 for (i=0;i<rx_message[2];i++) {
                     usart_tx_b (*eeprom_buf++);
                 }
@@ -269,16 +275,6 @@ void main( void )
                 rx_state = 0;
                 break;
 
-            case 0x0d: // p16a_read_eeprom D
-                usart_tx_b (0x8d);
-                eeprom_buf = (unsigned char *)flash_buffer;
-                isp_d_read_eeprom(eeprom_buf, rx_message[2]);
-                for (i=0;i<rx_message[2];i++) {
-                    usart_tx_b (*eeprom_buf++);
-                }
-                rx_state = 0;
-                break;
-                
             case 0x10: // prog_enter_progmode
                 p18_enter_progmode();
                 usart_tx_b (0x90);
@@ -456,35 +452,19 @@ for (i=0;i<n;i++)
 }
 
 
-void isp_read_eeprom (unsigned char * data, unsigned char n)
+void isp_read_eeprom (unsigned char * data, unsigned char n, unsigned char t)
 {
 unsigned char i;
 //_delay_us(3*ISP_CLK_DELAY);
 for (i=0;i<n;i++)
   {
-  isp_send(0x05,6); // read from data mem 
+  if (t == 'a')
+      isp_send(0x05,6); // read from data mem _A
+  else if (t == 'd')
+      isp_send(0x04,6); // read _D
   data[i] = (unsigned char)(isp_read_14s() & 0xff); // only 8 lsb is valid data - data(8) zero(6)
   isp_send(0x06,6); // inc address
   }
-}
-
-void isp_d_read_eeprom (unsigned char * data, unsigned char n)
-{
-unsigned char i;
-//_delay_us(3*ISP_CLK_DELAY);
-
-// eeprom starts at F000h
-//isp_send(0x1D,6); // Load PC Address
-//isp_send(0x00,8); // LSB
-//isp_send(0xe0,8);
-//isp_send(0x01,8); // MSB
-
-for (i=0;i<n;i++) {
-      isp_send(0x04,6);
-      data[i] = (unsigned char)(isp_read_14s() & 0xff); // only 8 lsb is valid data - data(8) zero(6)
-      isp_send(0x06,6);
-  }
-
 }
 
 
