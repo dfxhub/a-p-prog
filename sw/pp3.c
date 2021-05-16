@@ -500,7 +500,7 @@ int p16a_rst_pointer (void)
 
 int p16d_set_pointer (unsigned int addr)
     {
-    if (verbose>2) flsprintf(stdout,"Setting PC\n");
+    if (verbose>2) flsprintf(stdout,"\nSetting PC\n");
 	putByte(0x0c);					//operation number
     putByte(0x02);					//number of bytes remaining
 	putByte(addr & 0xff);
