@@ -1,0 +1,89 @@
+int getmcuids = 0;
+
+void listCPUtype(void)
+{
+	int read, i = 0;
+	size_t len = 0;
+	char *line = NULL;
+	char read_cpu_type[20];
+	fprintf(stdout, "\nSupported MCUs (MCUTYPE):\n\n\t");
+	FILE* mcuf = fopen("pp3_devices.dat", "r");
+	if (mcuf) {
+		while ((read =  getlinex(&line, &len, mcuf)) != -1) {
+				if (line[0] != '#') {
+					i++;
+					sscanf (line, "%s", (char*)&read_cpu_type);
+					fprintf(stdout, "%-11s", read_cpu_type);
+					if (i > 5) {
+						fprintf(stdout, "\n\t");
+						i = 0;
+					}
+				}
+		}
+		fprintf(stdout, "\n");
+		fclose(mcuf);
+		
+	}
+	exit(0);
+}
+
+
+
+while ((c = getopt (argc, argv, "ilc:nprs:t:v:b:")) != -1)
+
+            case 'l' :
+                listCPUtype();
+                break;
+            case 'i' :
+                getmcuids = 1;
+                break;
+
+
+
+	if ((readflash == 1) || (getmcuids == 1)) {
+		program = 0;
+		verify = 0;
+	}
+
+
+
+			if (getmcuids == 1) {
+				if (chip_family==CF_P16F_A) {
+					p16a_rst_pointer(); // may be unneeded
+					p16a_load_config(); // set address to 0x8000
+					
+					// 0x8000-0x8003 - user id
+					// 0x8004-0x8005 - reserved
+					// 0x8006        - devid
+					// 0x8007-0x8008 - config 1, 2
+					
+					p16a_read_page(config_bytes, 18); // need 9 14bits words
+					
+					printf("\nDevice Configuration Memory Data:\n");
+					
+					printf ("\tUser ID #1: 0x%02x%02x\n", config_bytes[1], config_bytes[0]); // msb lsb
+					printf ("\tUser ID #2: 0x%02x%02x\n", config_bytes[3], config_bytes[2]);
+					printf ("\tUser ID #3: 0x%02x%02x\n", config_bytes[5], config_bytes[4]);
+					printf ("\tUser ID #4: 0x%02x%02x\n", config_bytes[7], config_bytes[6]);
+
+					printf ("\tReserved #1: 0x%02x%02x\n", config_bytes[9], config_bytes[8]);
+					printf ("\tReserved #2: 0x%02x%02x\n", config_bytes[11], config_bytes[10]);
+					
+					// nn10 0111 000x xxxx
+					// devid________revid_
+					printf ("\tDevice ID: 0x%02x%02x\n", config_bytes[13], config_bytes[12]);
+					
+					printf ("\tConfig Word #1: 0x%02x%02x\n", config_bytes[15], config_bytes[14]);
+					printf ("\tConfig Word #2: 0x%02x%02x\n", config_bytes[17], config_bytes[16]);
+
+					//for (i=0; i<17; i=i+2) {
+					//	printf ("0x%02x%02x\n", config_bytes[i], config_bytes[i+1]);
+					//}
+					
+					//for (i=0; i<9; i++) {
+					//	p16a_inc_pointer(i);
+					//	p16a_read_page(tdat, 4);
+					//}
+					
+				}
+			}
