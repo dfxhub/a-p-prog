@@ -1512,27 +1512,31 @@ int main(int argc, char *argv[])
 					// 0x8004-0x8005 - reserved
 					// 0x8006        - devid
 					// 0x8007-0x8008 - config 1, 2
+					// 0x8009-0x800a - calibration 1, 2
 					
-					p16a_read_page(config_bytes, 18); // need 9 14bits words
+					p16a_read_page(config_bytes, 22); // need 11 14bits words
 					
 					printf("\nDevice Configuration Memory Data:\n");
 					
-					printf ("\tUser ID #1: 0x%02x%02x\n", config_bytes[1], config_bytes[0]); // msb lsb
-					printf ("\tUser ID #2: 0x%02x%02x\n", config_bytes[3], config_bytes[2]);
-					printf ("\tUser ID #3: 0x%02x%02x\n", config_bytes[5], config_bytes[4]);
-					printf ("\tUser ID #4: 0x%02x%02x\n", config_bytes[7], config_bytes[6]);
+					printf ("\tUser ID #1:          0x%02x%02x\n", config_bytes[1], config_bytes[0]); // msb lsb
+					printf ("\tUser ID #2:          0x%02x%02x\n", config_bytes[3], config_bytes[2]);
+					printf ("\tUser ID #3:          0x%02x%02x\n", config_bytes[5], config_bytes[4]);
+					printf ("\tUser ID #4:          0x%02x%02x\n", config_bytes[7], config_bytes[6]);
 
-					printf ("\tReserved #1: 0x%02x%02x\n", config_bytes[9], config_bytes[8]);
-					printf ("\tReserved #2: 0x%02x%02x\n", config_bytes[11], config_bytes[10]);
+					printf ("\tReserved #1:         0x%02x%02x\n", config_bytes[9], config_bytes[8]);
+					printf ("\tReserved #2:         0x%02x%02x\n", config_bytes[11], config_bytes[10]);
 					
 					// nn10 0111 000x xxxx
 					// devid________revid_
 					// printf ("\tDevice ID: 0x%02x%02x\n", config_bytes[13], config_bytes[12]);
-					printf ("\tDevice ID: "); printbin(((((unsigned int)(config_bytes[13])<<8) + config_bytes[12]) >> 5) & 0x1ff, 9); printf("\n");
-					printf ("\tRevision ID: "); printbin(config_bytes[12] & 0x1f, 5); printf("\n");
+					printf ("\tDevice ID:           "); printbin(((((unsigned int)(config_bytes[13])<<8) + config_bytes[12]) >> 5) & 0x1ff, 9); printf("\n");
+					printf ("\tRevision ID:         "); printbin(config_bytes[12] & 0x1f, 5); printf("\n");
 					
-					printf ("\tConfig Word #1: 0x%02x%02x\n", config_bytes[15], config_bytes[14]);
-					printf ("\tConfig Word #2: 0x%02x%02x\n", config_bytes[17], config_bytes[16]);
+					printf ("\tConfig Word #1:      0x%02x%02x\n", config_bytes[15], config_bytes[14]);
+					printf ("\tConfig Word #2:      0x%02x%02x\n", config_bytes[17], config_bytes[16]);
+
+					printf ("\tCalibration Word #1: 0x%02x%02x\n", config_bytes[19], config_bytes[18]);
+					printf ("\tCalibration Word #2: 0x%02x%02x\n", config_bytes[21], config_bytes[20]);
 
 					//for (i=0; i<17; i=i+2) {
 					//	printf ("0x%02x%02x\n", config_bytes[i], config_bytes[i+1]);
