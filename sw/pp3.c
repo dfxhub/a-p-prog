@@ -379,7 +379,7 @@ void printHelp()
     flsprintf(stdout,"USAGE: pp <options> <hex_file>\n\n");
     flsprintf(stdout,"OPTIONS:\n\n");
     flsprintf(stdout,"   -c <COM | serial>     port to use (REQUIRED)\n");
-    flsprintf(stdout,"   -t <MCU>              type of MCU to use (REQUIRED)\n");
+    flsprintf(stdout,"   -t <MCUTYPE>              type of MCU to use (REQUIRED)\n");
     flsprintf(stdout,"   -b <boudrate>         port speed (default 115200)\n");
     flsprintf(stdout,"   -s <ms>               sleep ms after opening serial port\n");
     flsprintf(stdout,"   -n                    do not verify\n");
@@ -422,7 +422,10 @@ void parseArgs(int argc, char *argv[])
                 sscanf(optarg,"%d",&sleep_time);
                 break;
             case 't' :
-                setCPUtype(optarg);
+                if (setCPUtype(optarg) == -1) {
+					printf("Problem operating devices database.\n");
+					exit(0);
+				}
                 break;
             case 'v' :
                 sscanf(optarg,"%d",&verbose);
@@ -480,34 +483,32 @@ void listCPUtype(void)
 	exit(0);
 }
 
-int setCPUtype(char* cpu)
-    {
-    int name_len,i,read;
-    name_len = strlen (cpu);
-    for(i = 0; i<name_len; i++) cpu[i] = tolower(cpu[i]);
-    char * line = NULL;
-    char * filename = "pp3_devices.dat";
-    char read_cpu_type[20], read_algo_type[20];
-    int read_flash_size, read_page_size, read_id, read_mask;
+int setCPUtype(char* cpu) {
+	int name_len,i,read;
+	name_len = strlen (cpu);
+	for(i = 0; i<name_len; i++) cpu[i] = tolower(cpu[i]);
+	char * line = NULL;
+	char * filename = "pp3_devices.dat";
+	char read_cpu_type[20], read_algo_type[20];
+	int read_flash_size, read_page_size, read_id, read_mask;
+	int cpu_found = 0;
 
-    size_t len = 0;
-    if (verbose>2) printf ("Opening filename %s \n", filename);
-    FILE* sf = fopen(filename, "r");
-    if (sf==0)
-        {
-        return -1;
-        if (verbose>0) printf ("Can't open database file %s\n",filename);
-        }
+	size_t len = 0;
+	if (verbose>2) printf ("Opening filename %s \n", filename);
+	FILE* sf = fopen(filename, "r");
+	if (sf==0) {
+		printf ("Can't open database file %s\n",filename);
+		return -1;
+	}
+	
     if (verbose>2) printf ("File open\n");
-    while ((read =  getlinex(&line, &len, sf)) != -1)
-        {
+	
+    while ((read = getlinex(&line, &len, sf)) != -1) {
         if (verbose>3) printf("\nRead %d chars: %s",read,line);
-        if (line[0]!='#')
-			{
+        if (line[0]!='#') {
 			sscanf (line,"%s %d %d %x %x %s",(char*)&read_cpu_type,&read_flash_size,&read_page_size,&read_id,&read_mask,(char*)&read_algo_type);
 			if (verbose>3) printf("\n*** %s,%d,%d,%x,%x,%s",read_cpu_type,read_flash_size,read_page_size,read_id,read_mask,read_algo_type);
-			if (strcmp(read_cpu_type,cpu)==0)
-				{
+			if (strcmp(read_cpu_type,cpu)==0) {
 				flash_size = read_flash_size;
 				page_size = read_page_size;
 				devid_expected = read_id;
@@ -527,27 +528,41 @@ int setCPUtype(char* cpu)
 				if (strcmp("CF_P18F_Q",read_algo_type)==0) chip_family = CF_P18F_Q;
 				if (chip_family == CF_P18F_A) config_size = 16;
 				if (chip_family == CF_P18F_B) config_size = 8;
-				if (chip_family == CF_P18F_C) 
-					{
-						config_size = 16;
-						chip_family = CF_P18F_B;
-					}
+				if (chip_family == CF_P18F_C) {
+					config_size = 16;
+					chip_family = CF_P18F_B;
+				}
 				if (chip_family == CF_P18F_D) config_size = 16;
 				if (chip_family == CF_P18F_E) config_size = 16;
 				if (chip_family == CF_P18F_F) config_size = 12;
 				if (chip_family == CF_P18F_Q) config_size = 12;
-				if (chip_family == CF_P18F_G) 
-					{
-						config_size = 10;
-						chip_family = CF_P18F_F;
-					}				
-				if (verbose>2) printf("chip family:%d, config size:%d\n",chip_family,config_size);
+				if (chip_family == CF_P18F_G) {
+					config_size = 10;
+					chip_family = CF_P18F_F;
 				}
+				if (verbose>2) printf("chip family:%d, config size:%d\n",chip_family,config_size);
+				cpu_found = 1;
+				break;
+			} else { // MCU not found
+				cpu_found = 0;
 			}
-        }
-    fclose(sf);
-    return 0;
-    }
+		} // line is not comment
+	} // while
+	
+	fclose(sf);
+	
+	if (!cpu_found) {
+		printf("No matches for '%s' in the database.\n", cpu);
+		return -1;
+	}
+	
+	return 0;
+}
+
+
+//
+// device commands
+//
 
 int p16a_rst_pointer (void)
     {
@@ -1004,6 +1019,9 @@ int p16c_write_cfg (void)
 	return 0;
     }
 
+//
+// general
+//
 
 int prog_enter_progmode (void)
     {
@@ -1504,7 +1522,8 @@ int main(int argc, char *argv[])
 			
 			
 			if (getmcuids == 1) {
-				if (chip_family==CF_P16F_A) {
+				if ((chip_family==CF_P16F_A) ||
+					(chip_family==CF_P16F_D)) {
 					p16a_rst_pointer(); // may be unneeded
 					p16a_load_config(); // set address to 0x8000
 					
@@ -1524,19 +1543,39 @@ int main(int argc, char *argv[])
 					printf ("\tUser ID #4:          0x%02x%02x\n", config_bytes[7], config_bytes[6]);
 
 					printf ("\tReserved #1:         0x%02x%02x\n", config_bytes[9], config_bytes[8]);
-					printf ("\tReserved #2:         0x%02x%02x\n", config_bytes[11], config_bytes[10]);
+					if (chip_family==CF_P16F_A)
+						printf ("\tReserved #2:         0x%02x%02x\n", config_bytes[11], config_bytes[10]);
+					else if (chip_family==CF_P16F_D)
+						printf ("\tRevision ID:         0x%02x%02x\n", config_bytes[11], config_bytes[10]);
 					
-					// nn10 0111 000x xxxx
-					// devid________revid_
-					// printf ("\tDevice ID: 0x%02x%02x\n", config_bytes[13], config_bytes[12]);
-					printf ("\tDevice ID:           "); printbin(((((unsigned int)(config_bytes[13])<<8) + config_bytes[12]) >> 5) & 0x1ff, 9); printf("\n");
-					printf ("\tRevision ID:         "); printbin(config_bytes[12] & 0x1f, 5); printf("\n");
+					if (chip_family==CF_P16F_A) {
+						// nn10 0111 000x xxxx
+						// devid________revid_
+						// printf ("\tDevice ID: 0x%02x%02x\n", config_bytes[13], config_bytes[12]);
+						printf ("\tDevice ID:           "); printbin(((((unsigned int)(config_bytes[13])<<8) + config_bytes[12]) >> 5) & 0x1ff, 9); printf("\n");
+						printf ("\tRevision ID:         "); printbin(config_bytes[12] & 0x1f, 5); printf("\n");
+					} else if (chip_family==CF_P16F_D)
+						printf ("\tDevice ID:           0x%02x%02x\n", config_bytes[13], config_bytes[12]);
 					
 					printf ("\tConfig Word #1:      0x%02x%02x\n", config_bytes[15], config_bytes[14]);
 					printf ("\tConfig Word #2:      0x%02x%02x\n", config_bytes[17], config_bytes[16]);
-
-					printf ("\tCalibration Word #1: 0x%02x%02x\n", config_bytes[19], config_bytes[18]);
-					printf ("\tCalibration Word #2: 0x%02x%02x\n", config_bytes[21], config_bytes[20]);
+					if (chip_family==CF_P16F_A) {
+						printf ("\tCalibration Word #1: 0x%02x%02x\n", config_bytes[19], config_bytes[18]);
+						printf ("\tCalibration Word #2: 0x%02x%02x\n", config_bytes[21], config_bytes[20]);
+					} else if (chip_family==CF_P16F_D) {
+						printf ("\tConfig Word #3:      0x%02x%02x\n", config_bytes[19], config_bytes[18]);
+						printf ("\tConfig Word #4:      0x%02x%02x\n", config_bytes[21], config_bytes[20]);
+					}
+					
+					if (chip_family==CF_P16F_D) {
+						p16d_set_pointer(0xe000);
+						p16a_read_page(config_bytes, 8);
+						
+						printf ("\tCalibration Word #1: 0x%02x%02x\n", config_bytes[1], config_bytes[0]);
+						printf ("\tCalibration Word #2: 0x%02x%02x\n", config_bytes[3], config_bytes[2]);
+						printf ("\tCalibration Word #3: 0x%02x%02x\n", config_bytes[5], config_bytes[4]);
+						printf ("\tCalibration Word #4: 0x%02x%02x\n", config_bytes[7], config_bytes[6]);
+					}
 
 					//for (i=0; i<17; i=i+2) {
 					//	printf ("0x%02x%02x\n", config_bytes[i], config_bytes[i+1]);
